@@ -35,123 +35,126 @@ Explanation: The following cells can flow to the Pacific and Atlantic oceans, as
 Note that there are other possible paths for these cells to flow to the Pacific and Atlantic oceans.
 
 */
+/*
+	 PENDING TO RUN WHOLE ALGORITHAM WITH DFS
+*/
+ 		int[] xLocation = new []{0, 0, 1, -1 };
+        int[] yLocation = new[] { 1, -1, 0, 0 };
+        void Main()
+        {
+            var Grid = new[] {
+                new[] { 1, 2, 2, 3, 5 },
+                new[] { 3, 2, 3, 4, 4 },
+                new[] { 2, 4, 5, 3, 1 },
+                new[] { 6, 7, 1, 4, 5 },
+                new[] { 5, 1, 1, 2, 4 }
 
-void Main()
-{
-	
-	var Grid=new[]{
-		 new[]{1,2,2,3,5},
-	     new[]{3,2,3,4/*Here Error Is Identify...*/,4},
-	     new[]{2,4,5,3,1},
-  	     new[]{6,7,1,4,5},
-	     new[]{5,1,1,2,4}
-	};
- try{
- 	
-	//Grid.Dump();
-	//visited.Dump();
-	
-	GetAtlanticVistedPosition(Grid);
- }catch(Exception ex){
-   ex.Message.Dump();
- }
-
-}
-int[] xposition={0,0,1,-1};
-int[] yposition={1,-1,0,0};
-
-HashSet<(int,int)> GetAtlanticVistedPosition(int[][] grid){
-   
-	var set = new HashSet<(int,int)>();
-	var numberOfRows=grid.Length;
-	var numberOfColumns=grid[0].Length;
-	for(int i=0;i<numberOfRows;i++)
-		set.Add((i,0));
-    for(int i=0;i<numberOfColumns;i++)
-		set.Add((0,i));
-	
-	//set.Dump();
-	for(int row=1;row<numberOfRows;row++){
-	  for(int col=1;col<numberOfColumns;col++){
-	     
-			for(int k=0;k<xposition.Length;k++){
-			    
-			    if(!set.Contains((row,col))){
-				
-				var newRow=row+xposition[k];
-				var newCol=col+yposition[k];
-				if((reachEnd(newRow,newCol,grid)== false )&&canAtlanticReach(row,col,newRow,newCol,set,grid)==true){
-					"Adding".Dump();
-					set.Add((row,col));
-				}
-			 }
-			}
-	  }
-	}
-	
-	return set;
-}
-
-bool[][] getVisitedArray(int[][] grid){
-	var numberOfRows=grid.Length;
-	var numberOfColumns=grid[0].Length;
-	
-	var visited=new bool[numberOfRows][];
-    for(int i=0;i<visited.Length;i++){
-	  visited[i]=new bool[numberOfColumns];
-	}
-	return visited;
-}
-
-
-bool reachEnd(int currHorx,
-			 int currVert,int[][] grid){
-
-	var numberOfRows=grid.Length;
-	var numberOfColumns=grid[0].Length;		 
-    var result=false; 
-	if(currHorx>=numberOfRows ||
-	   currHorx<=0 ||
-	   currVert>=numberOfColumns ||
-	   currVert<=0) {
-	    result=true;
-	   };
-	   
-    //result.Dump();
-    return result;
-}
-
-bool canAtlanticReach(int row,int col,int nextRow,int nextCol,HashSet<(int,int)> set,int[][] grid){
-	 if(set.Contains((nextRow,nextCol))) return true;
-	 if(canFlow(row,nextRow,col,nextCol,grid)){
-	 
-	   for(int k=0;k<xposition.Length;k++){
-				var newRow=row+xposition[k];
-				var newCol=col+yposition[k];
-				if((reachEnd(newRow,newCol,grid)== false )&& canAtlanticReach(row,col,newRow,newCol,set,grid)){
-					return true;
-				}
-			}
-	 }
+            };
 		
-	return false;	
-}
+            var AtlanticLocation= GetAtlanticLocationBFS(Grid);
+			//AtlanticLocation.Dump();
+    		var PacificLocation=GetPacificLocationBFS(Grid);
+			//PacificLocation.Dump();
+        	AtlanticLocation.IntersectWith(PacificLocation);
+			AtlanticLocation.Dump();
+		}
 
-bool canFlow(int currHorx,int nextHorx,
-			 int currVert,int nextVert,
-			 int[][] grid){
 
-	var numberOfRows=grid.Length;
-	var numberOfColumns=grid[0].Length;
-	
-	
-	if(nextHorx>=numberOfRows ||
-	   nextHorx<=0 ||
-	   nextVert>=numberOfColumns ||
-	   nextVert<=0) return false;
-	   grid[currHorx][currVert].Dump();
-	if(grid[currHorx][currVert]>=grid[nextHorx][nextVert]) return true;
-	
-	return false;
-}
+  
+        HashSet<(int, int)> GetAtlanticLocationBFS(int[][] Grid) {
+            var visitedArray = getVisisted(Grid);
+            var hashSet = new HashSet<(int,int)>();
+            var queu = new Queue<(int, int)>();
+            for (int i=(Grid.Length-1);i>=0;i--) {
+                for (int j = (Grid[0].Length - 1); j >= 0; j--) {
+                    if ((j == (Grid[0].Length - 1)) || (i == (Grid.Length - 1))) {
+                        visitedArray[i][j] = true;
+                        queu.Enqueue((i, j));
+                        hashSet.Add((i, j));
+                    }
+                }
+            }
+			
+			while (queu.Count > 0) {
+                var currentLocation = queu.Dequeue(); 
+                
+                for(int i=0;i<xLocation.Length;i++){
+                    var newX = currentLocation.Item1 + xLocation[i];
+                    var newY = currentLocation.Item2 + yLocation[i];
+                    if (IsValid(newX, newY, Grid) &&
+                        CanFlow(currentLocation.Item1, currentLocation.Item2, newX, newY, Grid) &&
+                         !visitedArray[newX][newY]) {
+                        visitedArray[newX][newY] = true;
+                        queu.Enqueue((newX, newY));
+                        hashSet.Add((newX, newY));
+                    }
+                }
+                
+            }
 
+            return hashSet;
+        }
+
+        bool IsValid(int currX, int currY,int[][] Grid) {
+            if ((currY >= 0 && currY < Grid[0].Length) && 
+                (currX >=0 && currX<Grid.Length)) {
+                return true;
+            }
+            return false;
+        }
+        
+        bool CanFlow(int currX,int currY,int nextX,int nextY,int[][] Grid) {
+            if (Grid[currX][currY] <= Grid[nextX][nextY]) return true;
+            return false;
+        }
+
+
+        HashSet<(int,int)> GetPacificLocationBFS(int[][] Grid) {
+        var visitedArray = getVisisted(Grid);
+            var hashSet = new HashSet<(int, int)>();
+            var queu = new Queue<(int, int)>();
+            for (int i =0; i < Grid.Length; i++)
+            {
+                for (int j = 0; j<Grid[0].Length; j++)
+                {
+                    if ((j == 0) || (i == 0))
+                    {
+                        visitedArray[i][j] = true;
+                        queu.Enqueue((i, j));
+                        hashSet.Add((i, j));
+                    }
+                }
+            }
+			
+            while (queu.Count > 0)
+            {
+                var currentLocation = queu.Dequeue();
+
+                for (int i = 0; i < xLocation.Length; i++)
+                {
+                    var newX = currentLocation.Item1 + xLocation[i];
+                    var newY = currentLocation.Item2 + yLocation[i];
+                    if (IsValid(newX, newY, Grid) &&
+                        CanFlow(currentLocation.Item1, currentLocation.Item2, newX, newY, Grid) &&
+                         !visitedArray[newX][newY])
+                    {
+                        visitedArray[newX][newY] = true;
+                        queu.Enqueue((newX, newY));
+                        hashSet.Add((newX, newY));
+                    }
+                }
+
+            }
+
+            return hashSet;
+        }
+
+        bool[][] getVisisted(int[][] Grid) {
+            var numberofRows = Grid.Length;
+            var numberofColumns = Grid[0].Length;
+            var visited = new bool[numberofRows][];
+            for (int i=0;i<visited.Length;i++) {
+                visited[i] = new bool[numberofColumns];
+            }
+            return visited;
+        }
