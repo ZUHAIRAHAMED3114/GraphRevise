@@ -31,6 +31,7 @@
             var AdjacentMatrix=getAdjacentMatrix(connection, false);
             List<(int, int)> criticalConenction = new List<(int, int)>();
             List<int> articulatePoints = new List<int>();
+			
             getArticulatePoint(AdjacentMatrix,articulatePoints,criticalConenction);
 			AdjacentMatrix.Dump();
 			articulatePoints.Dump();
@@ -45,42 +46,45 @@
             var visited = new bool[numberofNodes.Count + 1];
             var dist = new int[numberofNodes.Count + 1];
             var low = new int[numberofNodes.Count + 1];
-
+            var stack=new Stack<int>();
             numberofNodes.ForEach(x =>
             {
                 if (!visited[x]) {
-                    SccTarjanDFS(x, visited, dist, low, adjacentMatrix, articulatePoints, criticalConenction);
+				   x.Dump();
+                    SccTarjanDFS(x, visited, dist, low, adjacentMatrix,stack,articulatePoints, criticalConenction);
                 }
 
             });
             return;
         }
 
-        void SccTarjanDFS(int source,bool[] visited,int[] dist,int[] low,Dictionary<int,List<int>> adjacentMatrix,
+        void SccTarjanDFS(int source,bool[] visited,int[] dist,int[] low,Dictionary<int,List<int>> adjacentMatrix,Stack<int> stack,
                                             List<int> articulatePoints,List<(int,int)> criticalConnection) {
             if (visited[source]) return;
             dfs++;
             dist[source] = dfs;
             low[source] = dfs;
             visited[source] = true;
+			stack.Push(source);
             
             if (adjacentMatrix.ContainsKey(source)) {
                 var remainingEdge = adjacentMatrix[source];
+		
                 remainingEdge.ForEach(x =>
                 {
                     if (!visited[x])
                     {
-                        SccTarjanDFS(x, visited, dist, low, adjacentMatrix,articulatePoints,criticalConnection);
+                        SccTarjanDFS(x, visited, dist, low, adjacentMatrix,stack,articulatePoints,criticalConnection);
                         low[source] = Math.Min(low[source], low[x]);
                      
 
 					}
-                    else {
+                    if(stack.Contains(x)) {
                         low[source] = Math.Min(low[source], dist[x]); 
                     }
 					  
 					  
-					  if (low[x] >= dist[source]) {
+					  if (low[x] > dist[source]) {
                         articulatePoints.Add(source);
                         criticalConnection.Add((source,x));
                      }
