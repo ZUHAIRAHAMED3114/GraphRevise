@@ -75,7 +75,7 @@ void DFS(int source,bool[] visited,Dictionary<int,List<int>> graph){
 }
 
 
-//void PrintConnectedComponent(Dictionary<int,List<ing>> graph){
+//void PrintConnectedComponent(Dictionary<int,List<int>> graph,List<int> Nodes){
+//		
 //
 //}
-// You can define other methods, fields, classes and namespaces here
